@@ -145,6 +145,12 @@
     <Compile Include="Common\Components\MainToolbar.xaml.cs">
       <DependentUpon>MainToolbar.xaml</DependentUpon>
     </Compile>
+    <Compile Include="DI\InjectAttribute.cs" />
+    <Compile Include="DI\ServiceProvider.cs" />
+    <Compile Include="Services\InMemoryCultureAccessor.cs" />
+    <Compile Include="Services\ISelectedCultureAccessor.cs" />
+    <Compile Include="DI\IServiceProvider.cs" />
+    <Compile Include="DI\SimpleInjectorContainerExtensions.cs" />
     <Compile Include="Properties\Resources.pt-BR.Designer.cs">
       <DependentUpon>Resources.pt-BR.resx</DependentUpon>
       <AutoGen>True</AutoGen>
@@ -320,6 +326,17 @@
       <Project>{d8efa045-5482-4bba-a1bf-28667d5f4635}</Project>
       <Name>YALV.Core</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="SimpleInjector">
+      <Version>5.4.4</Version>
+    </PackageReference>
+    <PackageReference Include="System.Reactive">
+      <Version>6.0.0</Version>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Settings\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

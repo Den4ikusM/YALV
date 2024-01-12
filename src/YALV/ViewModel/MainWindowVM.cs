@@ -10,6 +10,7 @@ using System.Windows.Data;
 using System.Windows.Shell;
 using System.Windows.Threading;
 using YALV.Common;
+using YALV.Common.Components;
 using YALV.Common.Interfaces;
 using YALV.Core;
 using YALV.Core.Domain;
@@ -37,8 +38,14 @@ namespace YALV.ViewModel
             CommandIncreaseInterval = new CommandRelay(commandIncreaseIntervalExecute, p => true);
             CommandDecreaseInterval = new CommandRelay(commandDecreaseIntervalExecute, p => true);
             CommandAbout = new CommandRelay(commandAboutExecute, p => true);
+            CommandAddUdpSource = new CommandRelay(commandAddUdpSourceExecute, p => true);
 
             FileList = new ObservableCollection<FileItem>();
+            FileList.CollectionChanged += (sender, args) => {
+                if (!IsAutoRefreshEnabled && FileList.Any(f => f.Path.StartsWith("udp://"))) {
+                    IsAutoRefreshEnabled = true;
+                }
+            };
             Items = new ObservableCollection<LogItem>();
             loadFolderList();
 
@@ -152,6 +159,8 @@ namespace YALV.ViewModel
         /// About Command
         /// </summary>
         public ICommandAncestor CommandAbout { get; protected set; }
+
+        public ICommandAncestor CommandAddUdpSource { get; protected set; }
 
         protected virtual object commandExitExecute(object parameter)
         {
@@ -452,6 +461,17 @@ namespace YALV.ViewModel
         {
             var win = new About() { Owner = _callingWin as Window };
             win.ShowDialog();
+            return null;
+        }
+
+        protected virtual object commandAddUdpSourceExecute(object parameter)
+        {
+            var input = PromptDialog.Prompt("Input endpoint address", "Title", "udp://localhost:7071");
+            if (input != null) {
+                var uri = new Uri(input);
+                FileList.Add(new FileItem(uri.ToString(), uri.ToString()));
+                UpdateSelectedFiles();
+            }
             return null;
         }
 
@@ -1021,16 +1041,7 @@ namespace YALV.ViewModel
             _loadingFileList = false;
 
             //Load item if only one
-            if (FileList.Count == 1)
-            {
-                if (IsFileSelectionEnabled)
-                {
-                    SelectedFile = FileList[0];
-                    SelectedFile.Checked = true;
-                }
-                else
-                    SelectedFile = FileList[0];
-            }
+            UpdateSelectedFiles();
         }
 
         #endregion
@@ -1742,6 +1753,20 @@ namespace YALV.ViewModel
 
                 if (currentItem != null)
                     SelectedLogItem = currentItem;
+            }
+        }
+
+        private void UpdateSelectedFiles()
+        {
+            if (FileList.Count == 1)
+            {
+                if (IsFileSelectionEnabled)
+                {
+                    SelectedFile = FileList[0];
+                    SelectedFile.Checked = true;
+                }
+                else
+                    SelectedFile = FileList[0];
             }
         }
 

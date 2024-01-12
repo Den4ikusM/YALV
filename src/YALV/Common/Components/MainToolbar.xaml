@@ -87,6 +87,16 @@
         </StackPanel>
     </Button>
 
+    <Button
+        Style="{StaticResource ToolbarButtonStyle}"
+        ToolTip="{x:Static Properties:Resources.Common_Components_MainToolbar_AddUdpSource_Tooltip}"
+        Command="{Binding Path=CommandAddUdpSource}">
+        <StackPanel>
+            <Image Source="/Resources/Icons/save_folder.png" />
+            <TextBlock Text="{x:Static Properties:Resources.Common_Components_MainToolbar_AddUdpSource_Text}" />
+        </StackPanel>
+    </Button>
+
     <Separator
         Margin="2,0,12,0" />
 

@@ -249,8 +249,14 @@
   <data name="Common_Components_MainToolbar_AddFolderPath_Tooltip" xml:space="preserve">
     <value>Add Folder to Favorites...</value>
   </data>
+  <data name="Common_Components_MainToolbar_AddUdpSource_Tooltip" xml:space="preserve">
+    <value>Add UDP source...</value>
+  </data>
   <data name="Common_Components_MainToolbar_AddFolderPath_Text" xml:space="preserve">
     <value>ADD FOLDER</value>
+  </data>
+  <data name="Common_Components_MainToolbar_AddUdpSource_Text" xml:space="preserve">
+    <value>ADD UDP SOURCE</value>
   </data>
   <data name="Common_Components_MainToolbar_RefreshLog_Tooltip" xml:space="preserve">
     <value>Refresh Log</value>

@@ -97,7 +97,7 @@ namespace YALV.Core
             IEnumerable<LogItem> result = null;
             try
             {
-                AbstractEntriesProvider provider = EntriesProviderFactory.GetProvider();
+                AbstractEntriesProvider provider = EntriesProviderFactory.GetProvider(path);
                 result = provider.GetEntries(path);
                 return result.ToList();
             }

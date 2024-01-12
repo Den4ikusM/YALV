@@ -5,8 +5,13 @@ namespace YALV.Core.Providers
 {
     public static class EntriesProviderFactory
     {
-        public static AbstractEntriesProvider GetProvider(EntriesProviderType type = EntriesProviderType.Xml)
+        private static UdpEntriesProvider udpEntriesProvider;
+
+        public static AbstractEntriesProvider GetProvider(string dataSource, EntriesProviderType type = EntriesProviderType.Xml)
         {
+            if (Uri.TryCreate(dataSource, UriKind.Absolute, out var uri) && uri.Scheme.Equals("udp", StringComparison.OrdinalIgnoreCase)) {
+                return udpEntriesProvider ?? (udpEntriesProvider = new UdpEntriesProvider());
+            }
             switch (type)
             {
                 case EntriesProviderType.Xml:

@@ -252,8 +252,6 @@ namespace YALV.ViewModel
 
         protected virtual object commandRefreshExecute(object parameter)
         {
-            Items.Clear();
-
             if (IsFileSelectionEnabled)
             {
                 foreach (FileItem item in FileList)
@@ -1251,6 +1249,10 @@ namespace YALV.ViewModel
 
             if (pathList != null)
             {
+                if (!pathList.Any(DataService.HasChanges)) {
+                    e.Result = new object[] {res, merge, true};
+                    return;
+                }
                 foreach (string path in pathList)
                 {
                     if (String.IsNullOrWhiteSpace(path))
@@ -1292,7 +1294,7 @@ namespace YALV.ViewModel
                     item.Id = itemId++;
             }
 
-            e.Result = new object[] { res, merge };
+            e.Result = new object[] { res, merge, false };
         }
 
         private void bkLoaderCompleted(object sender, RunWorkerCompletedEventArgs e)
@@ -1306,6 +1308,11 @@ namespace YALV.ViewModel
                     object[] res = e.Result as object[];
                     IList<LogItem> list = res[0] as IList<LogItem>;
                     bool merge = (bool)res[1];
+                    var noChanges = (bool)res[2];
+                    if (noChanges) {
+                        IsLoading = false;
+                        return;
+                    }
 
                     if (merge && Items.Count > 0)
                     {

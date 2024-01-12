@@ -1,3 +1,7 @@
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Threading;
+
 namespace YALV.Common
 {
     #region #using Directives
@@ -21,6 +25,11 @@ namespace YALV.Common
     /// </summary>
     public static class BusyIndicatorBehavior
     {
+        private static readonly Lazy<TaskScheduler> uiScheduler = new Lazy<TaskScheduler>(() => Dispatcher.CurrentDispatcher.ToTaskSchedulerAsync());
+        private static readonly object syncObject = new object();
+        private static CancellationTokenSource cts;
+        private static Task showBusyIndicatorTask;
+
         /// <summary>
         /// Default animation framerate
         /// </summary>
@@ -207,102 +216,25 @@ namespace YALV.Common
                         typeof(Grid).Name));
             }
 
-            if (isBusy)
-            {
-                Debug.Assert(LogicalTreeHelper.FindLogicalNode(hostGrid, "BusyIndicator") == null);
-
-                bool dimBackground = GetDimBackground(d);
-                var grid = new Grid
-                            {
-                                Name = "BusyIndicator",
-                                Opacity = 0.0
-                            };
-                if (dimBackground)
-                {
-                    //grid.Cursor = Cursors.Wait;
-                    //grid.ForceCursor = true;
-
-                    //InputManager.Current.PreProcessInput += OnPreProcessInput;
+            if (isBusy) {
+                lock (syncObject) {
+                    if (cts == null) {
+                        cts = new CancellationTokenSource();
+                        showBusyIndicatorTask = Task.Delay(TimeSpan.FromMilliseconds(500))
+                            .ContinueWith(t => {
+                                ShowBusyIndicator(d, hostGrid);
+                                cts.Dispose();
+                                cts = null;
+                            }, cts.Token, TaskContinuationOptions.OnlyOnRanToCompletion, uiScheduler.Value);
+                    }
                 }
-                grid.SetBinding(FrameworkElement.WidthProperty, new Binding("ActualWidth")
-                                                                    {
-                                                                        Source = hostGrid
-                                                                    });
-                grid.SetBinding(FrameworkElement.HeightProperty, new Binding("ActualHeight")
-                                                                    {
-                                                                        Source = hostGrid
-                                                                    });
-                for (int i = 1; i <= 3; ++i)
-                {
-                    grid.ColumnDefinitions.Add(new ColumnDefinition
-                                                {
-                                                    Width = new GridLength(1, GridUnitType.Star)
-                                                });
-                    grid.RowDefinitions.Add(new RowDefinition
-                                                {
-                                                    Height = new GridLength(1, GridUnitType.Star)
-                                                });
-                }
-
-                var viewbox = new Viewbox
-                                {
-                                    Width = 120.0,
-                                    Height = 120.0,
-                                    VerticalAlignment = VerticalAlignment.Center,
-                                    HorizontalAlignment = HorizontalAlignment.Center,
-                                    Stretch = Stretch.Uniform,
-                                    StretchDirection = StretchDirection.Both,
-                                    Child = new CircularProgressBar()
-                                };
-                grid.SetValue(Panel.ZIndexProperty, 1000);
-                grid.SetValue(Grid.RowSpanProperty, Math.Max(1, hostGrid.RowDefinitions.Count));
-                grid.SetValue(Grid.ColumnSpanProperty, Math.Max(1, hostGrid.ColumnDefinitions.Count));
-                if (GetAddMargins(d))
-                {
-                    viewbox.SetValue(Grid.RowProperty, 1);
-                    viewbox.SetValue(Grid.ColumnProperty, 1);
-                }
-                else
-                {
-                    viewbox.SetValue(Grid.RowSpanProperty, 3);
-                    viewbox.SetValue(Grid.ColumnSpanProperty, 3);
-                }
-                viewbox.SetValue(Panel.ZIndexProperty, 1);
-
-                var dimmer = new Rectangle
-                                {
-                                    Name = "Dimmer",
-                                    Opacity = GetDimmerOpacity(d),
-                                    Fill = GetDimmerBrush(d),
-                                    Visibility = (dimBackground ? Visibility.Visible : Visibility.Collapsed)
-                                };
-                dimmer.SetValue(Grid.RowSpanProperty, 3);
-                dimmer.SetValue(Grid.ColumnSpanProperty, 3);
-                dimmer.SetValue(Panel.ZIndexProperty, 0);
-                grid.Children.Add(dimmer);
-
-                grid.Children.Add(viewbox);
-
-                DoubleAnimation animation = new DoubleAnimation(1.0, GetDimTransitionDuration(d));
-                Timeline.SetDesiredFrameRate(animation, FRAMERATE);
-                grid.BeginAnimation(UIElement.OpacityProperty, animation);
-
-                hostGrid.Children.Add(grid);
             }
             else
             {
-                var grid = (Grid)LogicalTreeHelper.FindLogicalNode(hostGrid, "BusyIndicator");
-
-                Debug.Assert(grid != null);
-
-                if (grid != null)
-                {
-                    grid.Name = string.Empty;
-
-                    var fadeOutAnimation = new DoubleAnimation(0.0, GetDimTransitionDuration(d));
-                    Timeline.SetDesiredFrameRate(fadeOutAnimation, FRAMERATE);
-                    fadeOutAnimation.Completed += (sender, args) => OnFadeOutAnimationCompleted(d, hostGrid, grid);
-                    grid.BeginAnimation(UIElement.OpacityProperty, fadeOutAnimation);
+                lock (syncObject) {
+                    if (cts != null)
+                        cts.Cancel();
+                    showBusyIndicatorTask.ContinueWith(t => HideBusyIndicator(d, hostGrid), CancellationToken.None, TaskContinuationOptions.OnlyOnRanToCompletion, uiScheduler.Value);
                 }
             }
         }
@@ -324,6 +256,97 @@ namespace YALV.Common
             if (dimBackground)
             {
                 InputManager.Current.PreProcessInput -= OnPreProcessInput;
+            }
+        }
+
+        private static void ShowBusyIndicator(DependencyObject d, Grid hostGrid)
+        {
+            Debug.Assert(LogicalTreeHelper.FindLogicalNode(hostGrid, "BusyIndicator") == null);
+
+            bool dimBackground = GetDimBackground(d);
+            var grid = new Grid {
+                Name = "BusyIndicator",
+                Opacity = 0.0
+            };
+            if (dimBackground) {
+                //grid.Cursor = Cursors.Wait;
+                //grid.ForceCursor = true;
+
+                //InputManager.Current.PreProcessInput += OnPreProcessInput;
+            }
+
+            grid.SetBinding(FrameworkElement.WidthProperty, new Binding("ActualWidth") {
+                Source = hostGrid
+            });
+            grid.SetBinding(FrameworkElement.HeightProperty, new Binding("ActualHeight") {
+                Source = hostGrid
+            });
+            for (int i = 1; i <= 3; ++i) {
+                grid.ColumnDefinitions.Add(new ColumnDefinition {
+                    Width = new GridLength(1, GridUnitType.Star)
+                });
+                grid.RowDefinitions.Add(new RowDefinition {
+                    Height = new GridLength(1, GridUnitType.Star)
+                });
+            }
+
+            var viewbox = new Viewbox {
+                Width = 120.0,
+                Height = 120.0,
+                VerticalAlignment = VerticalAlignment.Center,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Stretch = Stretch.Uniform,
+                StretchDirection = StretchDirection.Both,
+                Child = new CircularProgressBar()
+            };
+            grid.SetValue(Panel.ZIndexProperty, 1000);
+            grid.SetValue(Grid.RowSpanProperty, Math.Max(1, hostGrid.RowDefinitions.Count));
+            grid.SetValue(Grid.ColumnSpanProperty, Math.Max(1, hostGrid.ColumnDefinitions.Count));
+            if (GetAddMargins(d)) {
+                viewbox.SetValue(Grid.RowProperty, 1);
+                viewbox.SetValue(Grid.ColumnProperty, 1);
+            }
+            else {
+                viewbox.SetValue(Grid.RowSpanProperty, 3);
+                viewbox.SetValue(Grid.ColumnSpanProperty, 3);
+            }
+
+            viewbox.SetValue(Panel.ZIndexProperty, 1);
+
+            var dimmer = new Rectangle {
+                Name = "Dimmer",
+                Opacity = GetDimmerOpacity(d),
+                Fill = GetDimmerBrush(d),
+                Visibility = (dimBackground ? Visibility.Visible : Visibility.Collapsed)
+            };
+            dimmer.SetValue(Grid.RowSpanProperty, 3);
+            dimmer.SetValue(Grid.ColumnSpanProperty, 3);
+            dimmer.SetValue(Panel.ZIndexProperty, 0);
+            grid.Children.Add(dimmer);
+
+            grid.Children.Add(viewbox);
+
+            DoubleAnimation animation = new DoubleAnimation(1.0, GetDimTransitionDuration(d));
+            Timeline.SetDesiredFrameRate(animation, FRAMERATE);
+            grid.BeginAnimation(UIElement.OpacityProperty, animation);
+
+            hostGrid.Children.Add(grid);
+        }
+
+        private static void HideBusyIndicator(DependencyObject d, Grid hostGrid)
+        {
+            var grid = (Grid)LogicalTreeHelper.FindLogicalNode(hostGrid, "BusyIndicator");
+
+            Debug.Assert(grid != null);
+
+            if (grid != null)
+            {
+                grid.Name = string.Empty;
+
+                var fadeOutAnimation = new DoubleAnimation(0.0, GetDimTransitionDuration(d));
+                Timeline.SetDesiredFrameRate(fadeOutAnimation, FRAMERATE);
+                fadeOutAnimation.Completed += (sender, args) => OnFadeOutAnimationCompleted(d, hostGrid, grid);
+                grid.BeginAnimation(UIElement.OpacityProperty, fadeOutAnimation);
             }
         }
 

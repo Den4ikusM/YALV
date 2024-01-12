@@ -107,5 +107,11 @@ namespace YALV.Core
                 throw;
             }
         }
+
+        public static bool HasChanges(string dataSource)
+        {
+            var provider = EntriesProviderFactory.GetProvider(dataSource);
+            return provider.HasChanges;
+        }
     }
 }

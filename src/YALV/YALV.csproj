@@ -122,6 +122,7 @@
     <Compile Include="Common\Components\AddRemoveMenu.xaml.cs">
       <DependentUpon>AddRemoveMenu.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Common\Components\DispatcherExtensions.cs" />
     <Compile Include="Common\Components\MainMenu.xaml.cs">
       <DependentUpon>MainMenu.xaml</DependentUpon>
     </Compile>

@@ -8,6 +8,8 @@ namespace YALV.Core.Providers
     {
         protected static readonly DateTime MinDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0);
 
+        public virtual bool HasChanges { get; protected set; } = true;
+
         public IEnumerable<LogItem> GetEntries(string dataSource)
         {
             return this.GetEntries(dataSource, new FilterParams());

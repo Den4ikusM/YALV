@@ -15,10 +15,13 @@ namespace Momentum.YalvAdapter
 
         public override void Format(TextWriter writer, LoggingEvent loggingEvent)
         {
+            var host = log4net.GlobalContext.Properties["log4net:HostName"] as string;
+            var instance = log4net.GlobalContext.Properties["ServiceUniqueName"] as string;
             var logEntry = new LogEntry() {
                 Level = loggingEvent.Level.ToString(),
                 TimeStamp = loggingEvent.TimeStamp,
-                Application = loggingEvent.Domain,
+                Application = instance ?? loggingEvent.Domain,
+                Host = host,
                 Thread = loggingEvent.ThreadName,
                 Logger = loggingEvent.LoggerName,
                 Message = loggingEvent.RenderedMessage,

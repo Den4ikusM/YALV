@@ -88,6 +88,7 @@ namespace YALV.Core.Providers
                 Thread = logEntry.Thread,
                 Logger = logEntry.Logger,
                 App = logEntry.Application,
+                HostName = logEntry.Host,
                 Message = logEntry.Message,
                 Throwable = logEntry.Exception,
             };

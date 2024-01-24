@@ -31,9 +31,13 @@ namespace YALV
     /// </summary>
     public partial class MainWindow : Window, IWinSimple
     {
-        public MainWindow(ICommandLineArgs commandLineArgs)
+        public static CultureInfo ResolvedCulture { get; set; }
+
+        public MainWindow(ICommandLineArgs commandLineArgs, IUiCultureProvider cultureProvider)
         {
-            InitCulture();
+            // todo: get rid of access culture using resources
+            Properties.Resources.Culture = cultureProvider.GetCulture();
+            ResolvedCulture = cultureProvider.GetCulture();
 
             InitializeComponent();
 
@@ -76,11 +80,6 @@ namespace YALV
             };
         }
 
-        public static System.Globalization.CultureInfo ResolvedCulture
-        {
-            get { return System.Globalization.CultureInfo.GetCultureInfo(Properties.Resources.CultureName); }
-        }
-
         private void txtItemId_KeyUp(object sender, KeyEventArgs e)
         {
             if ((e.Key == Key.Enter || e.Key == Key.Return) && Keyboard.Modifiers == ModifierKeys.None)
@@ -92,20 +91,6 @@ namespace YALV
         private void dgItems_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             OnRefreshUI(MainWindowVM.NOTIFY_ScrollIntoView);
-        }
-
-        private void InitCulture()
-        {
-            try
-            {
-                var culture = ConfigurationManager.AppSettings["Culture"];
-                if (!String.IsNullOrWhiteSpace(culture))
-                    Properties.Resources.Culture = new CultureInfo(culture);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, String.Empty, MessageBoxButton.OK, MessageBoxImage.Exclamation);
-            }
         }
 
         private void OnRefreshUI(string eventName, object parameter = null)

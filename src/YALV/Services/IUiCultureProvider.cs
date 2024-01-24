@@ -2,9 +2,8 @@
 
 namespace YALV
 {
-    interface ISelectedCultureAccessor
+    public interface IUiCultureProvider
     {
         CultureInfo GetCulture();
-        void SetCulture(CultureInfo culture);
     }
 }

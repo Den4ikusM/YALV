@@ -464,7 +464,7 @@ namespace YALV.ViewModel
 
         protected virtual object commandAddUdpSourceExecute(object parameter)
         {
-            var input = PromptDialog.Prompt("Input endpoint address", "Title", "udp://localhost:7071");
+            var input = PromptDialog.Prompt("Endpoint address", "Add UDP source", "udp://localhost:7071");
             if (input != null) {
                 var uri = new Uri(input);
                 FileList.Add(new FileItem(uri.ToString(), uri.ToString()));

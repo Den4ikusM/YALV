@@ -31,7 +31,7 @@ namespace YALV
     /// </summary>
     public partial class MainWindow : Window, IWinSimple
     {
-        public MainWindow(string[] args)
+        public MainWindow(ICommandLineArgs commandLineArgs)
         {
             InitCulture();
 
@@ -55,6 +55,7 @@ namespace YALV
 
             this.Loaded += delegate
             {
+                var args = commandLineArgs.Args;
                 if (args != null && args.Length > 0)
                     _vm.LoadFileList(args);
             };

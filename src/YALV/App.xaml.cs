@@ -14,7 +14,12 @@ namespace YALV
         {
             base.OnStartup(e);
 
-            var serviceProvider = ServiceProvider.Build();
+            var serviceProvider = ServiceProvider.Build(container =>
+            {
+                container.RegisterSingleton<ICommandLineArgs>(() => new CommandLineArgs(e.Args));
+                container.RegisterSingleton<ISelectedCultureAccessor>(() => new InMemoryCultureAccessor());
+                container.RegisterSingleton<MainWindow>();
+            });
             var cultureAccessor = serviceProvider.GetService<ISelectedCultureAccessor>();
             Thread.CurrentThread.CurrentCulture = cultureAccessor.GetCulture();
             Thread.CurrentThread.CurrentUICulture = cultureAccessor.GetCulture();
@@ -23,7 +28,8 @@ namespace YALV
             BusyIndicatorBehavior.FRAMERATE = framerate;
             FrameRateHelper.SetTimelineDefaultFramerate(framerate);
 
-            (new MainWindow(e.Args)).Show();
+            var window = serviceProvider.GetService<MainWindow>();
+            window.Show();
         }
     }
 }

@@ -148,6 +148,8 @@
     </Compile>
     <Compile Include="DI\InjectAttribute.cs" />
     <Compile Include="DI\ServiceProvider.cs" />
+    <Compile Include="Services\CommandLineArgs.cs" />
+    <Compile Include="Services\ICommandLineArgs.cs" />
     <Compile Include="Services\InMemoryCultureAccessor.cs" />
     <Compile Include="Services\ISelectedCultureAccessor.cs" />
     <Compile Include="DI\IServiceProvider.cs" />

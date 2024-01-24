@@ -1,21 +1,17 @@
-﻿using SimpleInjector;
+﻿using System;
+using SimpleInjector;
 
 namespace YALV
 {
     static class ServiceProvider
     {
-        public static IServiceProvider Build()
+        public static IServiceProvider Build(Action<Container> configRoot)
         {
             var container = new Container();
-            RegisterServices(container);
+            configRoot(container);
             var serviceProvider = container.RegisterServiceProvider();
             container.Verify();
             return serviceProvider;
-        }
-
-        private static void RegisterServices(Container container)
-        {
-            container.RegisterSingleton<ISelectedCultureAccessor>(() => new InMemoryCultureAccessor());
         }
     }
 }
